@@ -7,6 +7,7 @@ use chobie\Jira\Api\Result;
 use chobie\Jira\Api\UnauthorizedException;
 use chobie\Jira\Issue;
 use chobie\Jira\Issues\Walker;
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Prophecy\ObjectProphecy;
 
@@ -27,7 +28,7 @@ class WalkerTest extends TestCase
 	 */
 	protected $errorLogFile;
 
-	protected function setUp()
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -41,7 +42,7 @@ class WalkerTest extends TestCase
 		}
 	}
 
-	protected function tearDown()
+	protected function tearDown(): void
 	{
 		parent::tearDown();
 
@@ -61,13 +62,14 @@ class WalkerTest extends TestCase
 		return strpos($this->getName(false), 'AnyException') !== false;
 	}
 
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage you have to call Jira_Walker::push($jql, $fields) at first
-	 */
+    /**
+     *
+     */
 	public function testErrorWithoutJQL()
 	{
-		foreach ( $this->createWalker() as $issue ) {
+        $this->expectExceptionMessage('you have to call Jira_Walker::push($jql, $fields) at first');
+        $this->expectException(Exception::class);
+		foreach ($this->createWalker() as $issue ) {
 			echo '';
 		}
 	}
@@ -135,8 +137,6 @@ class WalkerTest extends TestCase
 	}
 
 	/**
-	 * @expectedException \chobie\Jira\Api\UnauthorizedException
-	 * @expectedExceptionMessage Unauthorized
 	 */
 	public function testUnauthorizedExceptionOnFirstPage()
 	{
@@ -145,6 +145,8 @@ class WalkerTest extends TestCase
 		$walker = $this->createWalker(5);
 		$walker->push('test jql', 'description');
 
+        $this->expectExceptionMessage('Unauthorized');
+        $this->expectException(UnauthorizedException::class);
 		foreach ( $walker as $issue ) {
 			echo '';
 		}
@@ -152,7 +154,7 @@ class WalkerTest extends TestCase
 
 	public function testAnyExceptionOnFirstPage()
 	{
-		$this->api->search('test jql', 0, 5, 'description')->willThrow(new \Exception('Anything'));
+		$this->api->search('test jql', 0, 5, 'description')->willThrow(new Exception('Anything'));
 
 		$walker = $this->createWalker(5);
 		$walker->push('test jql', 'description');
@@ -161,13 +163,12 @@ class WalkerTest extends TestCase
 			echo '';
 		}
 
-		$this->assertContains('Anything', file_get_contents($this->errorLogFile));
+        $this->assertStringContainsString('Anything', file_get_contents($this->errorLogFile));
 	}
 
-	/**
-	 * @expectedException \chobie\Jira\Api\UnauthorizedException
-	 * @expectedExceptionMessage Unauthorized
-	 */
+    /**
+     *
+     */
 	public function testUnauthorizedExceptionOnSecondPage()
 	{
 		// Full 1st page.
@@ -180,6 +181,8 @@ class WalkerTest extends TestCase
 		$walker = $this->createWalker(5);
 		$walker->push('test jql', 'description');
 
+        $this->expectExceptionMessage("Unauthorized");
+        $this->expectException(UnauthorizedException::class);
 		foreach ( $walker as $issue ) {
 			echo '';
 		}
@@ -192,7 +195,7 @@ class WalkerTest extends TestCase
 		$this->api->search('test jql', 0, 5, 'description')->willReturn($search_response1);
 
 		// Incomplete 2nd page.
-		$this->api->search('test jql', 5, 5, 'description')->willThrow(new \Exception('Anything'));
+		$this->api->search('test jql', 5, 5, 'description')->willThrow(new Exception('Anything'));
 
 		$walker = $this->createWalker(5);
 		$walker->push('test jql', 'description');
@@ -201,16 +204,17 @@ class WalkerTest extends TestCase
 			echo '';
 		}
 
-		$this->assertContains('Anything', file_get_contents($this->errorLogFile));
+		$this->assertStringContainsString('Anything', file_get_contents($this->errorLogFile));
 	}
 
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage passed argument is not callable
-	 */
+    /**
+     * @throws Exception
+     */
 	public function testSetDelegateError()
 	{
 		$walker = $this->createWalker();
+        $this->expectExceptionMessage("passed argument is not callable");
+        $this->expectException(Exception::class);
 		$walker->setDelegate('not a callable');
 	}
 
@@ -311,7 +315,7 @@ class WalkerTest extends TestCase
 	 *
 	 * @return Walker
 	 */
-	protected function createWalker($per_page = null)
+	protected function  createWalker($per_page = null)
 	{
 		return new Walker($this->api->reveal(), $per_page);
 	}

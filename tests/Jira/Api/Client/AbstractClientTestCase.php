@@ -20,7 +20,7 @@ abstract class AbstractClientTestCase extends TestCase
 	 */
 	protected $client;
 
-	protected function setUp()
+	protected function setUp(): void
 	{
 		parent::setUp();
 

@@ -5,10 +5,10 @@ namespace Tests\chobie\Jira;
 
 use chobie\Jira\Api;
 use chobie\Jira\Api\Authentication\AuthenticationInterface;
+use chobie\Jira\Api\Client\ClientInterface;
 use chobie\Jira\Api\Result;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Prophecy\ObjectProphecy;
-
 /**
  * Class ApiTest
  *
@@ -16,7 +16,6 @@ use Prophecy\Prophecy\ObjectProphecy;
  */
 class ApiTest extends TestCase
 {
-
 	const ENDPOINT = 'http://jira.company.com';
 
 	/**
@@ -40,12 +39,16 @@ class ApiTest extends TestCase
 	 */
 	protected $client;
 
-	protected function setUp()
+	protected function setUp(): void
 	{
 		parent::setUp();
 
 		$this->credential = $this->prophesize('chobie\Jira\Api\Authentication\AuthenticationInterface')->reveal();
-		$this->client = $this->prophesize('chobie\Jira\Api\Client\ClientInterface');
+
+        /** @var ClientInterface $client */
+        $client = $this->prophesize('chobie\Jira\Api\Client\ClientInterface');
+
+		$this->client = $client;
 
 		$this->api = new Api(self::ENDPOINT, $this->credential, $this->client->reveal());
 	}
